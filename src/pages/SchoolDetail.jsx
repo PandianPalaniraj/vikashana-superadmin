@@ -120,6 +120,12 @@ export default function SchoolDetail() {
   const [subSaving, setSubSaving] = useState(false)
   const [amountAuto, setAmountAuto] = useState(true)
 
+  // Admin credentials
+  const [pwModal,   setPwModal]   = useState(false)
+  const [newPw,     setNewPw]     = useState('')
+  const [pwSaving,  setPwSaving]  = useState(false)
+  const [revealedPw, setRevealedPw] = useState(null)
+
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const load = () =>
@@ -190,6 +196,21 @@ export default function SchoolDetail() {
       const { token, user, expires_at } = res.data
       setImpMsg(`Token for ${user.name} (expires ${new Date(expires_at).toLocaleTimeString()}): ${token}`)
     } catch { alert('Impersonation failed') }
+  }
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    if (!newPw.trim()) return
+    setPwSaving(true)
+    try {
+      const res = await api.post(`schools/${id}/reset-admin-password`, { password: newPw })
+      setRevealedPw({ email: res.data.email, password: res.data.password })
+      setPwModal(false)
+      setNewPw('')
+      showToast('Admin password reset successfully.')
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reset password.')
+    } finally { setPwSaving(false) }
   }
 
   if (loading) return <p style={{ color:'#64748b', padding:20 }}>Loading…</p>
@@ -384,6 +405,65 @@ export default function SchoolDetail() {
         </div>
       </div>
 
+      {/* Admin Credentials */}
+      <div style={s.fullCard}>
+        <div style={s.cardHead('#6366f1')}>
+          <span style={s.cardIcon}>🔑</span>
+          <span style={s.cardH}>Admin Login Credentials</span>
+        </div>
+        <div style={s.cardBody}>
+          {school.admin_user ? (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'10px 20px', alignItems:'end' }}>
+              <div>
+                <div style={s.fLbl}>Admin Name</div>
+                <div style={s.fVal}>{school.admin_user.name || '—'}</div>
+              </div>
+              <div>
+                <div style={s.fLbl}>Login Email</div>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ ...s.fVal, fontFamily:'monospace', background:'#f1f5f9', padding:'4px 10px', borderRadius:6 }}>
+                    {school.admin_user.email}
+                  </span>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(school.admin_user.email); showToast('Email copied!') }}
+                    style={{ background:'none', border:'none', cursor:'pointer', fontSize:15, padding:2 }}
+                    title="Copy email">📋</button>
+                </div>
+              </div>
+              <div>
+                <div style={s.fLbl}>Password</div>
+                {revealedPw && revealedPw.email === school.admin_user.email ? (
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span style={{ fontFamily:'monospace', background:'#fefce8', border:'1px solid #fde047', padding:'4px 10px', borderRadius:6, fontSize:13, fontWeight:700, color:'#713f12' }}>
+                      {revealedPw.password}
+                    </span>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(revealedPw.password); showToast('Password copied!') }}
+                      style={{ background:'none', border:'none', cursor:'pointer', fontSize:15, padding:2 }}
+                      title="Copy password">📋</button>
+                    <button
+                      onClick={() => setRevealedPw(null)}
+                      style={{ background:'none', border:'none', cursor:'pointer', fontSize:13, color:'#94a3b8', padding:2 }}
+                      title="Hide">✕</button>
+                  </div>
+                ) : (
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span style={{ fontFamily:'monospace', fontSize:14, color:'#94a3b8', letterSpacing:2 }}>••••••••</span>
+                    <button
+                      onClick={() => { setNewPw(''); setPwModal(true) }}
+                      style={{ padding:'5px 12px', background:'#6366f1', color:'#fff', border:'none', borderRadius:6, fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                      🔁 Reset Password
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p style={{ color:'#94a3b8', fontSize:13, margin:0 }}>No admin account found for this school.</p>
+          )}
+        </div>
+      </div>
+
       {/* Admin Impersonation */}
       <div style={s.fullCard}>
         <div style={s.cardHead('#64748b')}>
@@ -532,6 +612,41 @@ export default function SchoolDetail() {
                 <button type="submit" disabled={subSaving}
                   style={{ padding:'9px 22px', background:'#8b5cf6', color:'#fff', border:'none', borderRadius:8, fontWeight:700, cursor:'pointer' }}>
                   {subSaving ? 'Saving…' : school.subscription?.id ? 'Update Subscription' : 'Create Subscription'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reset Admin Password Modal ── */}
+      {pwModal && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:200, padding:16 }}
+          onClick={() => setPwModal(false)}>
+          <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth:400 }}
+            onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize:17, fontWeight:800, color:'#1e293b', marginBottom:4 }}>🔁 Reset Admin Password</h2>
+            <p style={{ fontSize:13, color:'#64748b', marginBottom:18, marginTop:4 }}>
+              Set a new password for <strong>{school.admin_user?.email}</strong>
+            </p>
+            <form onSubmit={handleResetPassword}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color:'#374151', marginBottom:5 }}>New Password</label>
+              <input
+                type="text"
+                autoFocus
+                style={{ width:'100%', padding:'10px 12px', border:'1.5px solid #d1d5db', borderRadius:8, fontSize:15, fontFamily:'monospace', boxSizing:'border-box', marginBottom:18 }}
+                placeholder="Enter new password"
+                value={newPw}
+                onChange={e => setNewPw(e.target.value)}
+                required
+                minLength={6}
+              />
+              <div style={{ display:'flex', gap:10, justifyContent:'flex-end' }}>
+                <button type="button" style={{ padding:'9px 20px', background:'#f1f5f9', color:'#374151', border:'none', borderRadius:8, fontWeight:600, cursor:'pointer' }}
+                  onClick={() => setPwModal(false)}>Cancel</button>
+                <button type="submit" disabled={pwSaving}
+                  style={{ padding:'9px 22px', background:'#6366f1', color:'#fff', border:'none', borderRadius:8, fontWeight:700, cursor:'pointer' }}>
+                  {pwSaving ? 'Saving…' : 'Reset & Show Password'}
                 </button>
               </div>
             </form>
