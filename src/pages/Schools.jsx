@@ -151,20 +151,25 @@ export default function Schools() {
       <table style={s.table}>
         <thead>
           <tr>
-            {['School', 'Email/Phone', 'Plan', 'Status', 'Students', 'Teachers', 'Actions'].map(h => (
+            {['School', 'Code', 'Email/Phone', 'Plan', 'Status', 'Students', 'Teachers', 'Actions'].map(h => (
               <th key={h} style={s.th}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={7} style={{ ...s.td, textAlign: 'center', color: '#64748b' }}>Loading…</td></tr>
+            <tr><td colSpan={8} style={{ ...s.td, textAlign: 'center', color: '#64748b' }}>Loading…</td></tr>
           ) : schools.length === 0 ? (
-            <tr><td colSpan={7} style={{ ...s.td, textAlign: 'center', color: '#64748b' }}>No schools found</td></tr>
+            <tr><td colSpan={8} style={{ ...s.td, textAlign: 'center', color: '#64748b' }}>No schools found</td></tr>
           ) : schools.map(sch => (
             <tr key={sch.id}>
               <td style={s.td}>
                 <button style={s.linkBtn} onClick={() => navigate(`/schools/${sch.id}`)}>{sch.name}</button>
+              </td>
+              <td style={s.td}>
+                {sch.school_code
+                  ? <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 13, background: '#f5f3ff', color: '#7c3aed', padding: '2px 8px', borderRadius: 6 }}>{sch.school_code}</span>
+                  : <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>}
               </td>
               <td style={s.td}>
                 <div style={{ fontSize: 13 }}>{sch.email}</div>
