@@ -8,7 +8,7 @@ const useAuthStore = create((set) => ({
   token: localStorage.getItem('superadmin_token') || null,
 
   login: async (email, password) => {
-    const res = await api.post('auth/login', { email, password })
+    const res = await api.post('auth/login', { login: email, password })
     const { token, user } = res.data.data
     localStorage.setItem('superadmin_token', token)
     localStorage.setItem('superadmin_user', JSON.stringify(user))
