@@ -121,10 +121,17 @@ export default function SchoolDetail() {
   const [amountAuto, setAmountAuto] = useState(true)
 
   // Admin credentials
-  const [pwModal,   setPwModal]   = useState(false)
-  const [newPw,     setNewPw]     = useState('')
-  const [pwSaving,  setPwSaving]  = useState(false)
+  const [pwModal,    setPwModal]   = useState(false)
+  const [newPw,      setNewPw]     = useState('')
+  const [pwSaving,   setPwSaving]  = useState(false)
   const [revealedPw, setRevealedPw] = useState(null)
+  const [showAdminPw, setShowAdminPw] = useState(false)
+
+  // Users tab
+  const [tab,              setTab]              = useState('overview')
+  const [users,            setUsers]            = useState([])
+  const [usersLoading,     setUsersLoading]     = useState(false)
+  const [visiblePasswords, setVisiblePasswords] = useState({})
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -142,7 +149,16 @@ export default function SchoolDetail() {
       .catch(() => {})
   }
 
+  const loadUsers = () => {
+    setUsersLoading(true)
+    api.get(`schools/${id}/users`)
+      .then(r => setUsers(r.data.data || []))
+      .catch(() => {})
+      .finally(() => setUsersLoading(false))
+  }
+
   useEffect(() => { load(); loadExtras() }, [id]) // eslint-disable-line
+  useEffect(() => { if (tab === 'users') loadUsers() }, [tab]) // eslint-disable-line
 
   const handleToggle = async () => {
     await api.post(`schools/${id}/toggle-status`)
@@ -298,6 +314,95 @@ export default function SchoolDetail() {
         ))}
       </div>
 
+      {/* Tab bar */}
+      <div style={{ display:'flex', gap:4, borderBottom:'2px solid #e2e8f0', marginBottom:20 }}>
+        {[['overview','Overview'],['users','Users']].map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            style={{ padding:'9px 20px', background:'none', border:'none', borderBottom: tab===key ? '2px solid #6366f1' : '2px solid transparent', marginBottom:-2, cursor:'pointer', fontSize:13, fontWeight:700, color: tab===key ? '#6366f1' : '#64748b', transition:'color .15s' }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Users Tab ── */}
+      {tab === 'users' && (
+        <div style={s.fullCard}>
+          <div style={s.cardHead('#6366f1')}>
+            <span style={s.cardIcon}>👥</span>
+            <span style={s.cardH}>All Users — {school.name}</span>
+          </div>
+          <div style={s.cardBody}>
+            {usersLoading ? (
+              <p style={{ color:'#64748b', fontSize:13, margin:0 }}>Loading users…</p>
+            ) : users.length === 0 ? (
+              <p style={{ color:'#94a3b8', fontSize:13, margin:0 }}>No users found for this school.</p>
+            ) : (
+              <div style={{ overflowX:'auto' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13, minWidth:700 }}>
+                  <thead>
+                    <tr style={{ borderBottom:'2px solid #f1f5f9' }}>
+                      {['Name','Role','Mobile','Email','Password','Status','Last Login','Since'].map(h => (
+                        <th key={h} style={{ padding:'8px 10px', textAlign:'left', fontSize:11, fontWeight:700, color:'#64748b', textTransform:'uppercase', whiteSpace:'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u => {
+                      const roleColors = { admin:'#EEF2FF', teacher:'#ECFDF5', parent:'#FEF3C7', staff:'#FFF1F2', super_admin:'#F5F3FF' }
+                      const roleFg     = { admin:'#4338ca', teacher:'#059669', parent:'#b45309', staff:'#be123c', super_admin:'#7c3aed' }
+                      const isVisible  = visiblePasswords[u.id]
+                      return (
+                        <tr key={u.id} style={{ borderBottom:'1px solid #f8fafc' }}>
+                          <td style={{ padding:'9px 10px', fontWeight:600, color:'#1e293b' }}>{u.name}</td>
+                          <td style={{ padding:'9px 10px' }}>
+                            <span style={{ background: roleColors[u.role]||'#f1f5f9', color: roleFg[u.role]||'#475569', padding:'2px 10px', borderRadius:99, fontSize:11, fontWeight:700 }}>
+                              {u.role}
+                            </span>
+                          </td>
+                          <td style={{ padding:'9px 10px', fontFamily:'monospace', fontSize:12 }}>{u.phone || '—'}</td>
+                          <td style={{ padding:'9px 10px', fontSize:12, color:'#475569' }}>{u.email || '—'}</td>
+                          <td style={{ padding:'9px 10px' }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                              <span style={{ fontFamily:'monospace', fontSize:12, color: isVisible ? '#1e293b' : '#94a3b8' }}>
+                                {isVisible ? (u.plain_password || '—') : '••••••••'}
+                              </span>
+                              {u.plain_password && (
+                                <button
+                                  onClick={() => setVisiblePasswords(v => ({ ...v, [u.id]: !v[u.id] }))}
+                                  style={{ background:'none', border:'none', cursor:'pointer', fontSize:13, padding:0, color:'#6366f1' }}
+                                  title={isVisible ? 'Hide' : 'Show'}>
+                                  {isVisible ? '🙈' : '👁'}
+                                </button>
+                              )}
+                              {isVisible && u.plain_password && (
+                                <button
+                                  onClick={() => { navigator.clipboard.writeText(u.plain_password); showToast('Copied!') }}
+                                  style={{ background:'none', border:'none', cursor:'pointer', fontSize:12, padding:0 }}
+                                  title="Copy">📋</button>
+                              )}
+                            </div>
+                          </td>
+                          <td style={{ padding:'9px 10px' }}>
+                            <span style={{ color: u.status==='active' ? '#10b981' : '#ef4444', fontWeight:600, fontSize:12 }}>
+                              {u.status}
+                            </span>
+                          </td>
+                          <td style={{ padding:'9px 10px', fontSize:12, color:'#64748b' }}>{u.last_login ? fmtDate(u.last_login) : 'Never'}</td>
+                          <td style={{ padding:'9px 10px', fontSize:12, color:'#94a3b8' }}>{fmtDate(u.created_at)}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Overview Tab ── */}
+      {tab === 'overview' && <>
+
       {/* 2-col: School Info + Subscription */}
       <div style={s.grid2}>
 
@@ -432,30 +537,34 @@ export default function SchoolDetail() {
               </div>
               <div>
                 <div style={s.fLbl}>Password</div>
-                {revealedPw && revealedPw.email === school.admin_user.email ? (
-                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <span style={{ fontFamily:'monospace', background:'#fefce8', border:'1px solid #fde047', padding:'4px 10px', borderRadius:6, fontSize:13, fontWeight:700, color:'#713f12' }}>
-                      {revealedPw.password}
-                    </span>
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(revealedPw.password); showToast('Password copied!') }}
-                      style={{ background:'none', border:'none', cursor:'pointer', fontSize:15, padding:2 }}
-                      title="Copy password">📋</button>
-                    <button
-                      onClick={() => setRevealedPw(null)}
-                      style={{ background:'none', border:'none', cursor:'pointer', fontSize:13, color:'#94a3b8', padding:2 }}
-                      title="Hide">✕</button>
-                  </div>
-                ) : (
-                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <span style={{ fontFamily:'monospace', fontSize:14, color:'#94a3b8', letterSpacing:2 }}>••••••••</span>
-                    <button
-                      onClick={() => { setNewPw(''); setPwModal(true) }}
-                      style={{ padding:'5px 12px', background:'#6366f1', color:'#fff', border:'none', borderRadius:6, fontSize:12, fontWeight:700, cursor:'pointer' }}>
-                      🔁 Reset Password
-                    </button>
-                  </div>
-                )}
+                {(() => {
+                  const pw = revealedPw?.email === school.admin_user?.email
+                    ? revealedPw.password
+                    : (showAdminPw ? school.admin_password : null)
+                  return (
+                    <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                      <span style={{ fontFamily:'monospace', background: pw ? '#fefce8' : 'transparent', border: pw ? '1px solid #fde047' : 'none', padding: pw ? '4px 10px' : 0, borderRadius:6, fontSize:13, fontWeight:700, color: pw ? '#713f12' : '#94a3b8', letterSpacing: pw ? 0 : 2 }}>
+                        {pw || '••••••••'}
+                      </span>
+                      {school.admin_password && (
+                        <button onClick={() => setShowAdminPw(v => !v)}
+                          style={{ background:'none', border:'none', cursor:'pointer', fontSize:14, padding:2, color:'#6366f1' }}
+                          title={showAdminPw ? 'Hide' : 'Show password'}>
+                          {showAdminPw ? '🙈' : '👁'}
+                        </button>
+                      )}
+                      {pw && (
+                        <button onClick={() => { navigator.clipboard.writeText(pw); showToast('Password copied!') }}
+                          style={{ background:'none', border:'none', cursor:'pointer', fontSize:14, padding:2 }}
+                          title="Copy">📋</button>
+                      )}
+                      <button onClick={() => { setNewPw(''); setPwModal(true) }}
+                        style={{ padding:'4px 10px', background:'#6366f1', color:'#fff', border:'none', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                        🔁 Reset
+                      </button>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           ) : (
@@ -734,6 +843,8 @@ export default function SchoolDetail() {
           </div>
         </div>
       )}
+
+      </> /* end overview tab */}
 
       {toast && <div style={s.toast}>{toast}</div>}
     </div>
