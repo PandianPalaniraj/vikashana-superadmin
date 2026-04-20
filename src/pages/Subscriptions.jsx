@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/client'
-import { fmtDate, fmtStatus } from '../utils/format'
+import { fmtDate } from '../utils/format'
 
 const STATUS_COLOR = {
   active:    '#22c55e',
@@ -11,17 +11,15 @@ const STATUS_COLOR = {
   expired:   '#dc2626',
 }
 const PLAN_COLOR = {
-  free:       '#94a3b8',
-  starter:    '#3b82f6',
   pro:        '#8b5cf6',
   premium:    '#f59e0b',
   enterprise: '#ec4899',
 }
 const PLAN_LABEL = {
-  free: 'Forever Free', starter: 'Starter', pro: 'Pro', premium: 'Premium', enterprise: 'Enterprise',
+  pro: 'Pro', premium: 'Premium', enterprise: 'Enterprise',
 }
 
-const PLAN_RATES = { free: 0, starter: 15, pro: 25, premium: 40, enterprise: 0 }
+const PLAN_RATES = { pro: 25, premium: 40, enterprise: 0 }
 
 const calcAmount = (plan, students, cycle) => {
   const monthly = (PLAN_RATES[plan] || 0) * (students || 0)
@@ -170,7 +168,7 @@ export default function Subscriptions() {
 
   // MRR calculator
   const calcMrr = (plan, students) => {
-    const rates = { starter: 15, pro: 25, premium: 40, enterprise: 0 }
+    const rates = { pro: 25, premium: 40, enterprise: 0 }
     return (rates[plan] || 0) * students
   }
 
@@ -194,7 +192,6 @@ export default function Subscriptions() {
           <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center' }}>
             <select style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #93c5fd', fontSize: 13 }}
               onChange={e => setMrrStudents(s => ({ ...s, plan: e.target.value }))} defaultValue="pro">
-              <option value="starter">Starter ₹15</option>
               <option value="pro">Pro ₹25</option>
               <option value="premium">Premium ₹40</option>
             </select>
@@ -223,7 +220,6 @@ export default function Subscriptions() {
         </select>
         <select style={s.select} value={plan} onChange={e => { setPlan(e.target.value); setPage(1) }}>
           <option value="">All Plans</option>
-          <option value="starter">Starter</option>
           <option value="pro">Pro</option>
           <option value="premium">Premium</option>
           <option value="enterprise">Enterprise</option>
@@ -320,7 +316,7 @@ export default function Subscriptions() {
                 <div>
                   <label style={s.label}>Plan</label>
                   <select style={s.mSelect} value={form.plan || ''} onChange={e => handlePlanChange(e.target.value)}>
-                    {['starter','pro','premium','enterprise'].map(o => <option key={o} value={o}>{PLAN_LABEL[o]}</option>)}
+                    {['pro','premium','enterprise'].map(o => <option key={o} value={o}>{PLAN_LABEL[o]}</option>)}
                   </select>
                 </div>
                 <div>

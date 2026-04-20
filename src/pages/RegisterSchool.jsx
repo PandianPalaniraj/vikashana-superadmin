@@ -4,10 +4,6 @@ import api from '../api/client'
 
 // ─── Plan metadata ────────────────────────────────────────────────────────────
 const PLAN_META = {
-  free:       { monthly: 0,    annual: 0,     maxS: 50,   maxT: 10,  mobile: false, color: '#64748b',
-                features: ['50 Students', '10 Teachers', 'Fee Management', 'Basic Reports', 'Attendance'] },
-  starter:    { monthly: 15,   annual: 12.5,  maxS: 500,  maxT: 50,  mobile: false, color: '#3b82f6',
-                features: ['500 Students', '50 Teachers', 'SMS Notifications', 'Certificates', 'Timetable'] },
   pro:        { monthly: 25,   annual: 20.83, maxS: 2000, maxT: 200, mobile: true,  color: '#8b5cf6',
                 features: ['2,000 Students', '200 Teachers', 'Mobile App', 'API Access', 'Priority Support'] },
   premium:    { monthly: 40,   annual: 33.33, maxS: 5000, maxT: 500, mobile: true,  color: '#f59e0b',
@@ -15,7 +11,7 @@ const PLAN_META = {
   enterprise: { monthly: 0,    annual: 0,     maxS: '∞',  maxT: '∞', mobile: true,  color: '#ec4899',
                 features: ['Unlimited Students', 'Dedicated Server', 'Custom Pricing', 'SLA Guarantee', 'White Label'] },
 }
-const PLAN_LABEL = { free: 'Free', starter: 'Starter', pro: 'Pro', premium: 'Premium', enterprise: 'Enterprise' }
+const PLAN_LABEL = { pro: 'Pro', premium: 'Premium', enterprise: 'Enterprise' }
 
 const INDIAN_STATES = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana',
@@ -67,7 +63,7 @@ const s = {
   autoTag:   { display: 'inline-block', fontSize: 10, fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '1px 7px', borderRadius: 99, marginLeft: 6 },
 
   // Plan cards
-  planGrid:  { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginTop: 8 },
+  planGrid:  { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 8 },
   planCard:  (active, color) => ({
     border: `2px solid ${active ? color : '#e2e8f0'}`,
     borderRadius: 10, padding: '10px 8px', cursor: 'pointer',
@@ -128,7 +124,7 @@ function SectionHead({ icon, title, sub, color = '#6366f1' }) {
 function SubscriptionPreview({ form }) {
   const plan    = PLAN_META[form.plan] || {}
   const calc    = calcAmount(form.plan, form.billing_cycle, form.estimated_students)
-  const isFreePlan = form.plan === 'free' || form.plan === 'enterprise'
+  const isFreePlan = form.plan === 'enterprise'
   const isTrial = parseInt(form.trial_days || 0) > 0
   const trialEnd  = isTrial ? addDays(parseInt(form.trial_days)) : null
   const renewalBase = trialEnd || new Date()
@@ -256,7 +252,7 @@ function CredModal({ data, onDone }) {
   const waPhone = school.phone?.replace(/\D/g, '')
   const waLink  = `https://wa.me/91${waPhone}?text=${waMsg}`
 
-  const PLAN_C = { free:'#64748b', starter:'#3b82f6', pro:'#8b5cf6', premium:'#f59e0b', enterprise:'#ec4899' }
+  const PLAN_C = { pro:'#8b5cf6', premium:'#f59e0b', enterprise:'#ec4899' }
   const planColor = PLAN_C[sub.plan] || '#6366f1'
 
   return (
@@ -564,7 +560,7 @@ export default function RegisterSchool() {
                           )}
                           <div style={s.planName(isActive, meta.color)}>{PLAN_LABEL[id]}</div>
                           <div style={s.planRate(isActive, meta.color)}>
-                            {rate === 0 ? (id === 'free' ? 'Free' : 'Custom') : `₹${rate}`}
+                            {rate === 0 ? 'Custom' : `₹${rate}`}
                           </div>
                           {rate > 0 && <div style={s.planSub}>/student/mo</div>}
                           <div style={{ fontSize: 10, color: '#64748b', marginTop: 5 }}>
@@ -628,7 +624,7 @@ export default function RegisterSchool() {
                       ['Status', parseInt(form.trial_days) > 0 ? `Trial (${form.trial_days}d)` : 'Active'],
                       ['Billing Cycle', form.billing_cycle === 'annual' ? 'Annual' : 'Monthly'],
                       ['Mobile Access', planMeta.mobile ? 'Enabled' : 'Disabled'],
-                      ['Monthly Amount', form.plan !== 'free' && form.plan !== 'enterprise'
+                      ['Monthly Amount', form.plan !== 'enterprise'
                         ? `₹${(planMeta[form.billing_cycle] || 0) * (form.estimated_students || 0)}`
                         : '—'],
                       ['Trial Ends', parseInt(form.trial_days) > 0 ? fmtDate(addDays(parseInt(form.trial_days))) : 'N/A'],

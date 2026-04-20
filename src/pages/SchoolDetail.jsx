@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api/client'
 
-const PLAN_COLOR   = { free:'#64748b', starter:'#3b82f6', pro:'#8b5cf6', premium:'#f59e0b', enterprise:'#ec4899' }
-const PLAN_LABEL   = { free:'Free', starter:'Starter', pro:'Pro', premium:'Premium', enterprise:'Enterprise' }
+const PLAN_COLOR   = { pro:'#8b5cf6', premium:'#f59e0b', enterprise:'#ec4899' }
+const PLAN_LABEL   = { pro:'Pro', premium:'Premium', enterprise:'Enterprise' }
 const STATUS_COLOR = { active:'#22c55e', trial:'#f59e0b', overdue:'#ef4444', cancelled:'#94a3b8', expired:'#dc2626' }
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—'
@@ -78,7 +78,7 @@ function SectionCard({ icon, title, color, children, action }) {
   )
 }
 
-const PLAN_RATES = { free: 0, starter: 15, pro: 25, premium: 40, enterprise: 0 }
+const PLAN_RATES = { pro: 25, premium: 40, enterprise: 0 }
 
 const todayStr   = () => new Date().toISOString().slice(0, 10)
 const addMonths  = (dateStr, n) => { const d = new Date(dateStr + 'T00:00:00'); d.setMonth(d.getMonth() + n); return d.toISOString().slice(0, 10) }
@@ -626,7 +626,7 @@ export default function SchoolDetail() {
                       const amount = amountAuto ? recalcAmount(plan, subForm.billing_cycle, stats?.students) : subForm.monthly_amount
                       setSubForm(f => ({ ...f, plan, monthly_amount: amount }))
                     }}>
-                    {[['free','Free'],['starter','Starter ₹15/std'],['pro','Pro ₹25/std'],['premium','Premium ₹40/std'],['enterprise','Enterprise']].map(([v,l]) => (
+                    {[['pro','Pro ₹25/std'],['premium','Premium ₹40/std'],['enterprise','Enterprise']].map(([v,l]) => (
                       <option key={v} value={v}>{l}</option>
                     ))}
                   </select>
