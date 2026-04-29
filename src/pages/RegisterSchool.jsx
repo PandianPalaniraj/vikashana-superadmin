@@ -127,10 +127,13 @@ function SubscriptionPreview({ form }) {
   const isFreePlan = form.plan === 'enterprise'
   const isTrial = parseInt(form.trial_days || 0) > 0
   const trialEnd  = isTrial ? addDays(parseInt(form.trial_days)) : null
-  const renewalBase = trialEnd || new Date()
-  const renewalDate = form.billing_cycle === 'annual'
-    ? new Date(renewalBase.getFullYear() + 1, renewalBase.getMonth(), renewalBase.getDate())
-    : new Date(renewalBase.getFullYear(), renewalBase.getMonth() + 1, renewalBase.getDate())
+  // Vikashana is prepaid: if there's a trial, payment is due ON the trial end date.
+  // If activating immediately, the next renewal is one billing period from now.
+  const renewalDate = isTrial
+    ? trialEnd
+    : (form.billing_cycle === 'annual'
+        ? new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate())
+        : new Date(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()))
 
   const Row = ({ l, v, bold, color }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f8fafc', fontSize: 13 }}>
@@ -199,8 +202,13 @@ function SubscriptionPreview({ form }) {
           <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Timeline</div>
           <Row l="Status" v={isTrial ? `🟡 Trial (${form.trial_days} days)` : '🟢 Active'} color={isTrial ? '#f59e0b' : '#22c55e'} />
           {isTrial && <Row l="Trial ends" v={fmtDate(trialEnd)} />}
-          <Row l="First renewal" v={fmtDate(renewalDate)} />
+          <Row l="First renewal (Payment due)" v={fmtDate(renewalDate)} color="#dc2626" />
           <Row l="Billing cycle" v={form.billing_cycle === 'annual' ? 'Yearly' : 'Monthly'} />
+          {isTrial && (
+            <div style={{ fontSize: 11, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '6px 10px', marginTop: 8, lineHeight: 1.5 }}>
+              💡 Vikashana is prepaid — school must pay on or before <strong>{fmtDate(renewalDate)}</strong> to keep access after the trial.
+            </div>
+          )}
         </div>
 
         {/* Features */}
@@ -601,11 +609,16 @@ export default function RegisterSchool() {
                         ? `₹${(planMeta[form.billing_cycle] || 0) * (form.estimated_students || 0)}`
                         : '—'],
                       ['Trial Ends', parseInt(form.trial_days) > 0 ? fmtDate(addDays(parseInt(form.trial_days))) : 'N/A'],
-                      ['First Renewal', (() => {
-                        const base = parseInt(form.trial_days) > 0 ? addDays(parseInt(form.trial_days)) : new Date()
+                      // Prepaid: in trial, payment is due on the trial end date.
+                      // No trial: next renewal is one billing period from today.
+                      ['First Renewal (Payment Due)', (() => {
+                        if (parseInt(form.trial_days) > 0) {
+                          return fmtDate(addDays(parseInt(form.trial_days)))
+                        }
+                        const today = new Date()
                         return fmtDate(form.billing_cycle === 'annual'
-                          ? new Date(base.getFullYear() + 1, base.getMonth(), base.getDate())
-                          : new Date(base.getFullYear(), base.getMonth() + 1, base.getDate()))
+                          ? new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())
+                          : new Date(today.getFullYear(), today.getMonth() + 1, today.getDate()))
                       })()],
                     ].map(([l, v]) => (
                       <div key={l} style={{ display: 'flex', gap: 6 }}>
