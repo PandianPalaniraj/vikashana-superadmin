@@ -334,10 +334,8 @@ const BLANK = {
   school_name: '', school_type: 'Secondary', affiliation_board: 'CBSE', affiliation_no: '',
   established_year: '', address: '', city: '', state: '', pincode: '',
   phone: '', alternate_phone: '', email: '', website: '',
-  // Principal
-  principal_name: '', principal_phone: '', principal_email: '',
   // Admin login
-  admin_name: '', admin_email: '', admin_password: '',
+  admin_name: '', admin_email: '', admin_phone: '', admin_password: '',
   // Subscription
   plan: 'pro', billing_cycle: 'monthly', estimated_students: 100, trial_days: 30,
 }
@@ -356,16 +354,6 @@ export default function RegisterSchool() {
   const handleSchoolEmail = (v) => {
     set('email', v)
     if (!form.admin_email) set('admin_email', v)
-  }
-
-  // Auto-fill admin name / phone from principal
-  const handlePrincipalName = (v) => {
-    set('principal_name', v)
-    if (!form.admin_name) set('admin_name', v)
-  }
-  const handlePrincipalPhone = (v) => {
-    set('principal_phone', v)
-    if (!form.phone) set('phone', v)
   }
 
   const handleSubmit = async (e) => {
@@ -492,40 +480,19 @@ export default function RegisterSchool() {
               </div>
             </div>
 
-            {/* Principal & Admin */}
+            {/* Admin Login */}
             <div style={s.card}>
-              <SectionHead icon="👤" title="Principal & Admin Login" sub="Credentials for the school admin" color="#3b82f6" />
+              <SectionHead icon="🔐" title="Admin Login Account" sub="Credentials for the school admin" color="#3b82f6" />
               <div style={s.cardBody}>
 
-                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '9px 14px', fontSize: 12, color: '#1d4ed8', marginBottom: 4 }}>
-                  💡 The admin account is created using these details. Principal's info is saved to the school profile.
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '9px 14px', fontSize: 12, color: '#1d4ed8', marginBottom: 12 }}>
+                  💡 These credentials are used to login to Vikashana.
                 </div>
 
                 <div style={s.grid2}>
-                  <Field label="Principal Name" required hint="Saved to school profile">
-                    <input style={{ ...s.input, ...err('principal_name') }} value={form.principal_name} required
-                      onChange={e => handlePrincipalName(e.target.value)} placeholder="Dr. Anand Kumar" />
-                  </Field>
-                  <Field label="Principal Phone" hint="Auto-fills admin phone">
-                    <input style={s.input} value={form.principal_phone}
-                      onChange={e => handlePrincipalPhone(e.target.value)} placeholder="9876543210" />
-                  </Field>
-                </div>
-
-                <Field label="Principal Email" hint="Optional — for school records">
-                  <input style={s.input} type="email" value={form.principal_email}
-                    onChange={e => set('principal_email', e.target.value)} placeholder="principal@school.com" />
-                </Field>
-
-                <div style={{ borderTop: '1px dashed #e2e8f0', marginTop: 16, paddingTop: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>🔐 Admin Login Account</div>
-                  <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>These credentials are used to login to Vikashana.</div>
-                </div>
-
-                <div style={s.grid2}>
-                  <Field label="Admin Name" auto hint="Defaults to principal name">
-                    <input style={s.input} value={form.admin_name}
-                      onChange={e => set('admin_name', e.target.value)} placeholder={form.principal_name || 'Admin Name'} />
+                  <Field label="Admin Name" required hint="Full name of the school administrator">
+                    <input style={{ ...s.input, ...err('admin_name') }} value={form.admin_name} required
+                      onChange={e => set('admin_name', e.target.value)} placeholder="Dr. Anand Kumar" />
                   </Field>
                   <Field label="Admin Login Email" required hint="Must be unique across all schools">
                     <input style={{ ...s.input, ...err('admin_email') }} type="email" value={form.admin_email} required
@@ -533,10 +500,16 @@ export default function RegisterSchool() {
                   </Field>
                 </div>
 
-                <Field label="Admin Password" hint="Leave blank to auto-generate (e.g. Admin@1234)">
-                  <input style={s.input} type="text" value={form.admin_password}
-                    onChange={e => set('admin_password', e.target.value)} placeholder="Leave blank for auto-generated password" />
-                </Field>
+                <div style={s.grid2}>
+                  <Field label="Admin Phone" hint="Optional — defaults to school phone">
+                    <input style={s.input} value={form.admin_phone}
+                      onChange={e => set('admin_phone', e.target.value)} placeholder="9876543210" />
+                  </Field>
+                  <Field label="Admin Password" hint="Leave blank to auto-generate (e.g. Admin@1234)">
+                    <input style={s.input} type="text" value={form.admin_password}
+                      onChange={e => set('admin_password', e.target.value)} placeholder="Leave blank for auto-generated password" />
+                  </Field>
+                </div>
 
               </div>
             </div>
