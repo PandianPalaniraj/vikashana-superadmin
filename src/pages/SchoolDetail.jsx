@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api/client'
+import StudentImportModal from '../components/StudentImportModal'
 
 const PLAN_COLOR   = { pro:'#8b5cf6', premium:'#f59e0b', enterprise:'#ec4899' }
 const PLAN_LABEL   = { pro:'Pro', premium:'Premium', enterprise:'Enterprise' }
@@ -113,6 +114,7 @@ export default function SchoolDetail() {
   const [toast,   setToast]   = useState('')
   const [invoices,  setInvoices]  = useState([])
   const [timeline,  setTimeline]  = useState([])
+  const [showImportModal, setShowImportModal] = useState(false)
 
   // Subscription modal
   const [subModal,  setSubModal]  = useState(false)
@@ -263,6 +265,9 @@ export default function SchoolDetail() {
           )}
           <button style={{ ...s.btn('#6366f1','#6366f1') }} onClick={() => navigate(`/invoices?generate=${id}`)}>
             🧾 Generate Invoice
+          </button>
+          <button style={{ ...s.btn('#10b981','#10b981') }} onClick={() => setShowImportModal(true)}>
+            📥 Import Students
           </button>
         </div>
       </div>
@@ -847,6 +852,14 @@ export default function SchoolDetail() {
       </> /* end overview tab */}
 
       {toast && <div style={s.toast}>{toast}</div>}
+
+      {showImportModal && school && (
+        <StudentImportModal
+          school={school}
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => { setToast('Students imported'); setTimeout(() => setToast(''), 3000) }}
+        />
+      )}
     </div>
   )
 }
