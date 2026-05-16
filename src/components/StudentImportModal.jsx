@@ -324,7 +324,7 @@ export default function StudentImportModal({ school, onClose, onSuccess }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                     <tr style={{ background: '#0F172A' }}>
-                      {['Row', 'Status', 'Name', 'DOB', 'Gender', 'Class', 'Parent', 'Mobile', 'Errors'].map(h => (
+                      {['Row', 'Status', 'Name', 'DOB', 'Gender', 'Class', 'Parent', 'Mobile', 'Admission No', 'Errors'].map(h => (
                         <th key={h} style={{
                           padding: '9px 12px', textAlign: 'left', fontSize: 10, fontWeight: 800,
                           color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap',
@@ -355,12 +355,38 @@ export default function StudentImportModal({ school, onClose, onSuccess }) {
                         <td style={{ padding: '9px 12px', color: '#64748B' }}>{row.data.parent_name || '—'}</td>
                         <td style={{ padding: '9px 12px', color: '#64748B' }}>{row.data.parent_mobile || '—'}</td>
                         <td style={{ padding: '9px 12px' }}>
+                          {row.data.admission_no_note ? (
+                            <div>
+                              <span style={{ textDecoration: 'line-through', color: '#94A3B8', fontSize: 11 }}>
+                                {row.data.admission_no}
+                              </span>
+                              <div style={{ fontSize: 10, color: '#D97706', fontWeight: 600 }}>
+                                → Auto-generated
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#64748B' }}>
+                              {row.data.admission_no || <em style={{ color: '#94A3B8' }}>Auto</em>}
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '9px 12px' }}>
                           {row.errors.length > 0
                             ? <ul style={{ margin: 0, padding: '0 0 0 14px', color: '#EF4444', fontSize: 11 }}>
                                 {row.errors.map((e, i) => <li key={i}>{e}</li>)}
                               </ul>
-                            : <span style={{ color: '#10B981', fontSize: 11, fontWeight: 600 }}>No errors</span>
+                            : !row.data.admission_no_note && <span style={{ color: '#10B981', fontSize: 11, fontWeight: 600 }}>No errors</span>
                           }
+                          {row.data.admission_no_note && (
+                            <div style={{
+                              fontSize: 11, color: '#D97706',
+                              marginTop: row.errors.length > 0 ? 6 : 0,
+                              display: 'flex', alignItems: 'flex-start', gap: 4,
+                            }}>
+                              <span>⚠️</span>
+                              <span>{row.data.admission_no_note}</span>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
